@@ -236,6 +236,8 @@ function renderMlResults() {
 
 // Binds actions
 export function initMlControls() {
+    window.trainAndVisualizeMlModel = trainAndVisualizeMlModel;
+
     const modelType = document.getElementById('ml-model-type');
     if (modelType) {
         modelType.onchange = () => handleMlModelTypeChange();

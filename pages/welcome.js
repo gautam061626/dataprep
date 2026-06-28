@@ -9,6 +9,28 @@ export function initWelcomePage(navigateCallback) {
     const fileUploader = document.getElementById('file-uploader-landing');
     const dropzone = document.getElementById('dropzone-landing');
 
+    window.handleFileSelect = async (e) => {
+        const target = (e && e.target) ? e.target : e;
+        const file = (target && target.files) ? target.files[0] : null;
+        if (file) {
+            await processUpload(file, navigateCallback);
+        }
+    };
+
+    window.loadDefaultMockupDataset = async () => {
+        try {
+            showStatusBarLoader(true);
+            const res = await API.loadSample();
+            syncState(res);
+            showNotification("Success", "Loaded Customer Churn dataset successfully.");
+            navigateCallback('dashboard');
+        } catch (err) {
+            alert("Error loading sample dataset: " + err.message);
+        } finally {
+            showStatusBarLoader(false);
+        }
+    };
+
     if (fileUploader) {
         fileUploader.onchange = async (e) => {
             const file = e.target.files[0];

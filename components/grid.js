@@ -204,3 +204,33 @@ function showNotification(title, message) {
         console.log(`Notification: [${title}] ${message}`);
     }
 }
+
+window.gridGoToPage = (page) => {
+    if (page === -1) {
+        AppState.gridPage = 999999;
+    } else {
+        AppState.gridPage = page;
+    }
+    renderDataGrid();
+};
+
+window.gridPrevPage = () => {
+    if (AppState.gridPage > 1) {
+        AppState.gridPage--;
+        renderDataGrid();
+    }
+};
+
+window.gridNextPage = () => {
+    AppState.gridPage++;
+    renderDataGrid();
+};
+
+window.handleGridSortReset = () => {
+    const sortSelect = document.getElementById('grid-sort-column');
+    if (sortSelect) sortSelect.value = '';
+    AppState.gridSortCol = '';
+    AppState.gridSortAsc = true;
+    renderDataGrid();
+};
+

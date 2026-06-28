@@ -215,3 +215,15 @@ export function initProfilingFilters() {
         filter.onchange = () => renderProfilingTable();
     }
 }
+
+window.switchProfileSubTab = (panelId, buttonEl) => {
+    document.querySelectorAll('.profile-subtab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(panelId);
+    if (panel) panel.classList.add('active');
+
+    if (buttonEl && buttonEl.parentNode) {
+        buttonEl.parentNode.querySelectorAll('.xp-tab-btn').forEach(btn => btn.classList.remove('active'));
+        buttonEl.classList.add('active');
+    }
+};
+

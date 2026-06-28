@@ -3,7 +3,7 @@
  * Handles communication with the FastAPI backend.
  */
 
-const BASE_URL = "https://your-render-url.onrender.com"; // Replace with your live Render backend URL
+const BASE_URL = ""; // Relative path to target same origin
 
 export async function uploadFile(file, delimiter, hasHeaders) {
     const formData = new FormData();

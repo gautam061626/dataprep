@@ -202,3 +202,6 @@ window.showNotification = (title, message) => {
         toast.style.display = 'none';
     }, 4500);
 };
+
+window.triggerNav = triggerNav;
+
