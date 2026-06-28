@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataPrep Studio - Vintage Data Preparation & Analysis Software</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+</head>
+<body class="theme-xp">
+
+  <!-- Main App Shell -->
+  <div id="desktop-window" class="window-shell">
+    
+    <!-- Main Split Workspace -->
+    <div class="workspace-wrapper">
+      
+      <!-- Simplified Navigation Sidebar -->
+      <aside class="sidebar-panel" id="sidebar-panel">
+        <div class="sidebar-header">
+          <span>Navigation</span>
+        </div>
+        <div class="sidebar-content" style="display: flex; flex-direction: column; justify-content: space-between; height: calc(100% - 30px); padding: 5px; box-sizing: border-box;">
+          
+          <ul class="sidebar-tabs" style="flex: 1; padding: 0; margin: 0; list-style: none;">
+            <li class="sidebar-tab active" id="node-landing" onclick="triggerNav('landing')">
+              <span class="tab-icon">🏠</span><span class="tab-text">Welcome</span>
+            </li>
+            <li class="sidebar-tab" id="node-dashboard" onclick="triggerNav('dashboard')">
+              <span class="tab-icon">📊</span><span class="tab-text">Dashboard</span>
+            </li>
+            <li class="sidebar-tab" id="node-profiling" onclick="triggerNav('profiling')">
+              <span class="tab-icon">🔎</span><span class="tab-text">Data Profile</span>
+            </li>
+            <li class="sidebar-tab" id="node-cleaning" onclick="triggerNav('cleaning')">
+              <span class="tab-icon">🧹</span><span class="tab-text">Data Cleaning</span>
+            </li>
+            <li class="sidebar-tab" id="node-visualizations" onclick="triggerNav('visualizations')">
+              <span class="tab-icon">📈</span><span class="tab-text">Charts</span>
+            </li>
+            <li class="sidebar-tab" id="node-reports" onclick="triggerNav('reports')">
+              <span class="tab-icon">📄</span><span class="tab-text">Audit Report</span>
+            </li>
+            <li class="sidebar-tab" id="node-export" onclick="triggerNav('export')">
+              <span class="tab-icon">⬇</span><span class="tab-text">Export CSV</span>
+            </li>
+            <li class="sidebar-tab" id="node-ml" onclick="triggerNav('ml')">
+              <span class="tab-icon">🤖</span><span class="tab-text">ML Models</span>
+            </li>
+          </ul>
+
+          <!-- Theme Skin Selector directly at bottom of sidebar! -->
+          <div class="classic-groupbox" style="margin-top: 10px; padding: 6px; flex-shrink: 0;">
+            <legend class="groupbox-legend">Visual Theme</legend>
+            <select id="settings-theme" class="xp-select-block" onchange="changeThemeSkin(this.value)" style="height: 22px; font-size: 11px; width: 100%;">
+              <option value="xp">Windows XP Blue</option>
+              <option value="classic">Classic</option>
+              <option value="olive">Olive</option>
+              <option value="silver">Silver</option>
+            </select>
+          </div>
+
+        </div>
+      </aside>
+
+
+      <!-- Main Workspace Panels -->
+      <main class="main-workspace-content">
+        
+        <!-- PAGE 1: Welcome -->
+        <section id="page-landing" class="page-panel active">
+          <div class="landing-hero-well" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%;">
+            <span style="font-size: 48px;">📊</span>
+            <h1 style="color: #003399; font-size: 24px; margin-bottom: 6px;">DataPrep Studio</h1>
+            <p style="color: #555; margin-bottom: 20px; font-size: 11px;">Upload a CSV dataset to profile, clean, and export.</p>
+
+            <div class="upload-dropzone-box" id="dropzone-landing" style="width: 480px; padding: 30px; margin-bottom: 15px;">
+              <div class="dropzone-icon">📥</div>
+              <h3>Drag & Drop CSV File Here</h3>
+              <p>or</p>
+              <input type="file" id="file-uploader-landing" accept=".csv" class="hidden-file-input" onchange="handleFileSelect(event)">
+              <button class="xp-btn xp-btn-primary" onclick="document.getElementById('file-uploader-landing').click()">
+                Browse File...
+              </button>
+            </div>
+
+            <!-- Delimiter Settings directly on the Welcome page -->
+            <div class="classic-groupbox" style="width: 480px; margin-bottom: 15px; padding: 10px; display: flex; gap: 15px; align-items: center; justify-content: center;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <label for="upload-delimiter-config" style="font-weight: bold; font-size: 11px;">Delimiter:</label>
+                <select id="upload-delimiter-config" class="xp-select" style="height: 20px; font-size: 11px; padding: 0 4px;">
+                  <option value=",">Comma (,)</option>
+                  <option value=";">Semicolon (;)</option>
+                  <option value="\t">Tab (\t)</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="checkbox" id="upload-has-headers" checked style="margin: 0;">
+                <label for="upload-has-headers" style="font-weight: bold; font-size: 11px;">Has Header Row</label>
+              </div>
+            </div>
+
+            <div class="quick-sample-load-well" style="border: 1px solid #808080;">
+              <button class="xp-btn xp-btn-success" onclick="loadDefaultMockupDataset()">
+                ⚡ Load Sample Customer Dataset
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 2: Dashboard -->
+        <section id="page-dashboard" class="page-panel">
+          <div class="workspace-header-title">
+            <h2>Project Dashboard</h2>
+          </div>
+
+          <!-- Basic metrics -->
+          <div class="dashboard-stats-grid">
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-filename">No Active Dataset</span>
+                <span class="card-lbl">Dataset Name</span>
+              </div>
+            </div>
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-rows">0</span>
+                <span class="card-lbl">Rows</span>
+              </div>
+            </div>
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-cols">0</span>
+                <span class="card-lbl">Columns</span>
+              </div>
+            </div>
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-missing">0</span>
+                <span class="card-lbl">Missing Cells</span>
+              </div>
+            </div>
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-duplicates">0</span>
+                <span class="card-lbl">Duplicates</span>
+              </div>
+            </div>
+            <div class="stat-card border-inset">
+              <div class="card-numbers">
+                <span class="card-val" id="dash-stat-quality">--</span>
+                <span class="card-lbl">Quality Rating</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-mid-row">
+            <div class="classic-groupbox flex-1">
+              <legend class="groupbox-legend">Quick Navigation Links</legend>
+              <div class="quick-nav-cards-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="nav-card" onclick="triggerNav('cleaning')">
+                  <h4>🧼 Data Cleaning Panel</h4>
+                  <p>Filter rows, replace null values, drop variables, and rename headers.</p>
+                </div>
+                <div class="nav-card" onclick="triggerNav('visualizations')">
+                  <h4>📊 Interactive Charts</h4>
+                  <p>Plot columns in bar charts, histograms, and scatter plots.</p>
+                </div>
+                <div class="nav-card" onclick="triggerNav('profiling')">
+                  <h4>🔍 View Data Profiles</h4>
+                  <p>Review column averages, standard deviations, and null rates.</p>
+                </div>
+                <div class="nav-card" onclick="triggerNav('export')">
+                  <h4>📤 Export Prepared CSV</h4>
+                  <p>Download clean tables or SQL script files.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="classic-groupbox" style="width: 250px;">
+              <legend class="groupbox-legend">Activity Log</legend>
+              <div class="dashboard-activity-container" style="height: 160px;">
+                <ul class="activity-timeline" id="dashboard-activity-log">
+                  <li class="timeline-empty">No cleaning operations performed yet.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 3: Profiling -->
+        <section id="page-profiling" class="page-panel">
+          <div class="workspace-header-title-row">
+            <h2>Dataset Diagnostics</h2>
+            <div class="header-action-row">
+              <input type="text" id="profiling-col-search" placeholder="Search variables..." oninput="refreshProfilingPage()" class="xp-input">
+              <select id="profiling-datatype-filter" onchange="refreshProfilingPage()" class="xp-select">
+                <option value="ALL">All Types</option>
+                <option value="Numeric">Numeric</option>
+                <option value="Categorical">Categorical</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="profiling-health-grid" style="margin-bottom: 5px;">
+            <div class="health-card border-inset" style="padding: 5px; width: 120px;">
+              <span class="health-score-val" id="profile-health-score" style="font-size: 24px;">--</span>
+              <span class="health-score-lbl">Health Score</span>
+            </div>
+            <div class="desc-card border-inset" style="padding: 5px;">
+              <div class="stats-mini-table" style="margin-top: 0; grid-template-columns: repeat(4, 1fr);">
+                <div><span>Columns:</span> <strong id="profile-total-cols">0</strong></div>
+                <div><span>Rows:</span> <strong id="profile-total-rows">0</strong></div>
+                <div><span>Memory:</span> <strong id="profile-memory">0 KB</strong></div>
+                <div><span>Completeness:</span> <strong id="profile-completeness-pct">100%</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main profiling grid -->
+          <div class="table-container border-inset" style="height: 200px;">
+            <table class="classic-table" id="profiling-meta-table">
+              <thead>
+                <tr>
+                  <th>Index</th>
+                  <th>Variable Name</th>
+                  <th>Type</th>
+                  <th>Missing Count</th>
+                  <th>Missing %</th>
+                  <th>Uniques</th>
+                  <th>Min</th>
+                  <th>Max</th>
+                  <th>Mean</th>
+                  <th>StdDev</th>
+                </tr>
+              </thead>
+              <tbody id="profiling-meta-table-body">
+                <tr><td colspan="10" class="text-center text-muted">No active dataset.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tabs details -->
+          <div class="classic-tabs-container" style="margin-top: 5px;">
+            <div class="tab-header-strip">
+              <button class="xp-tab-btn active" onclick="switchProfileSubTab('profile-tab-numeric', this)">Numeric Statistics</button>
+              <button class="xp-tab-btn" onclick="switchProfileSubTab('profile-tab-categorical', this)">Categorical Counts</button>
+            </div>
+            <div class="tab-content-container border-inset" style="padding: 5px;">
+              <div id="profile-tab-numeric" class="profile-subtab-panel active">
+                <select id="profile-numeric-col-select" onchange="renderNumericProfileDetails()" class="xp-select" style="margin-bottom: 5px;"></select>
+                <table class="summary-stats-grid-table">
+                  <tbody>
+                    <tr><td>Median:</td><td id="stat-median">--</td><td>Variance:</td><td id="stat-variance">--</td></tr>
+                    <tr><td>Q1 (25%):</td><td id="stat-q1">--</td><td>Sum:</td><td id="stat-sum">--</td></tr>
+                    <tr><td>Q3 (75%):</td><td id="stat-q3">--</td><td>Skewness:</td><td id="stat-skew">--</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="profile-tab-categorical" class="profile-subtab-panel">
+                <select id="profile-categorical-col-select" onchange="renderCategoricalProfileDetails()" class="xp-select" style="margin-bottom: 5px;"></select>
+                <div id="categorical-counts-results" class="value-counts-output"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 4: Data Cleaning -->
+        <section id="page-cleaning" class="page-panel">
+          <div class="workspace-header-title">
+            <h2>Data Cleaning Console</h2>
+          </div>
+
+          <div class="cleaning-split-layout">
+            <!-- Left panel inputs -->
+            <div class="operations-accordion-panel" style="width: 220px;">
+              <div class="classic-groupbox" style="height: 100%; overflow-y: auto; padding: 5px;">
+                <legend class="groupbox-legend">Operations</legend>
+                
+                <div class="operations-buttons-stack" style="gap: 5px;">
+                  
+                  <!-- Duplicates -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Remove Duplicates</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <button class="xp-btn xp-btn-primary xp-btn-block" onclick="runRemoveDuplicates()">Purge Duplicates</button>
+                    </div>
+                  </div>
+
+                  <!-- Missing Values -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Handle Missing</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-missing-col" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <select id="clean-missing-strategy" class="xp-select-block" onchange="handleMissingStrategyChange(this.value)" style="margin-bottom: 4px;">
+                        <option value="drop">Drop Rows</option>
+                        <option value="mean">Replace Mean</option>
+                        <option value="median">Replace Median</option>
+                        <option value="mode">Replace Mode</option>
+                        <option value="custom">Custom Val</option>
+                      </select>
+                      <input type="text" id="clean-missing-custom-val" placeholder="Value..." class="xp-input-block hidden" style="margin-bottom: 4px;">
+                      <button class="xp-btn xp-btn-primary xp-btn-block" onclick="runHandleMissingValues()">Apply Impute</button>
+                    </div>
+                  </div>
+
+                  <!-- Drop Column -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Drop Column</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-drop-col" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <button class="xp-btn xp-btn-danger xp-btn-block" onclick="runDropColumn()">Drop Column</button>
+                    </div>
+                  </div>
+
+                  <!-- Rename Column -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Rename Column</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-rename-target" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <input type="text" id="clean-rename-new" placeholder="New Name..." class="xp-input-block" style="margin-bottom: 4px;">
+                      <button class="xp-btn xp-btn-primary xp-btn-block" onclick="runRenameColumn()">Apply Rename</button>
+                    </div>
+                  </div>
+
+                  <!-- Replace Values -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Replace Text</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-replace-col" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <input type="text" id="clean-replace-find" placeholder="Find..." class="xp-input-block" style="margin-bottom: 4px;">
+                      <input type="text" id="clean-replace-sub" placeholder="Replace..." class="xp-input-block" style="margin-bottom: 4px;">
+                      <button class="xp-btn xp-btn-primary xp-btn-block" onclick="runReplaceValue()">Substitute</button>
+                    </div>
+                  </div>
+
+                  <!-- Standardize Strings -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Standardize Strings</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-string-col" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <select id="clean-string-op" class="xp-select-block" style="margin-bottom: 4px;">
+                        <option value="trim">Trim Whitespace</option>
+                        <option value="upper">UPPERCASE</option>
+                        <option value="lower">lowercase</option>
+                      </select>
+                      <button class="xp-btn xp-btn-primary xp-btn-block" onclick="runStringStandardize()">Apply Casing</button>
+                    </div>
+                  </div>
+
+                  <!-- Outliers -->
+                  <div class="op-card-well">
+                    <div class="op-card-header">Remove Outliers</div>
+                    <div class="op-card-body" style="padding: 4px;">
+                      <select id="clean-outlier-col" class="xp-select-block" style="margin-bottom: 4px;"></select>
+                      <button class="xp-btn xp-btn-warning xp-btn-block" onclick="runRemoveOutliers()">Purge Outliers</button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Spreadsheet view -->
+            <div class="interactive-grid-container flex-1">
+              <div class="grid-toolbar-strip border-inset" style="padding: 2px;">
+                <div class="toolbar-left" style="font-size: 10px;">
+                  <span>✏️ <strong>Double-click cell</strong> to edit value.</span>
+                </div>
+                <div class="toolbar-right">
+                  <input type="text" id="grid-search-input" placeholder="Search rows..." oninput="handleGridSearch(this.value)" class="xp-input" style="height: 18px;">
+                  <select id="grid-sort-column" class="xp-select" onchange="handleGridSort()" style="height: 18px; padding: 0;"></select>
+                  <button class="xp-btn" onclick="handleGridSortReset()" style="height: 18px; padding: 0 4px;">Clear</button>
+                </div>
+              </div>
+
+              <div class="table-container grid-table-wrapper border-inset" style="height: 250px;">
+                <table class="classic-table grid-table" id="interactive-data-grid">
+                  <thead>
+                    <tr id="grid-header-row"><th>Index</th><th>Row ID</th></tr>
+                  </thead>
+                  <tbody id="grid-body-rows">
+                    <tr><td colspan="10" class="text-center text-muted">No data loaded.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              <div class="grid-pagination-bar" style="padding: 2px 6px;">
+                <button class="xp-btn" id="grid-btn-first" onclick="gridGoToPage(1)" disabled>&lt;&lt;</button>
+                <button class="xp-btn" id="grid-btn-prev" onclick="gridPrevPage()" disabled>&lt;</button>
+                <span class="pagination-page-indicator" id="grid-page-indicator">0 / 0</span>
+                <button class="xp-btn" id="grid-btn-next" onclick="gridNextPage()" disabled>&gt;</button>
+                <button class="xp-btn" id="grid-btn-last" onclick="gridGoToPage(-1)" disabled>&gt;&gt;</button>
+                <span class="pagination-row-indicator" id="grid-row-indicator">0 - 0 of 0</span>
+              </div>
+            </div>
+
+            <!-- Operation History -->
+            <div class="cleaning-inspector-panel" style="width: 150px;">
+              <div class="classic-groupbox height-full" style="padding: 5px;">
+                <legend class="groupbox-legend">History</legend>
+                <button class="xp-btn xp-btn-warning xp-btn-block" onclick="undoAction()" id="cleanup-btn-undo" disabled>Undo</button>
+                <button class="xp-btn xp-btn-block" style="margin-top: 3px;" onclick="redoAction()" id="cleanup-btn-redo" disabled>Redo</button>
+                <button class="xp-btn xp-btn-danger xp-btn-block" style="margin-top: 3px;" onclick="confirmReset()">Reset</button>
+                <hr class="separator-line" style="margin: 5px 0;">
+                <div class="history-list-wrapper border-inset" style="height: 180px;">
+                  <ul class="activity-timeline" id="cleaning-operations-list"></ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- PAGE 5: Visualizations -->
+        <section id="page-visualizations" class="page-panel">
+          <div class="workspace-header-title">
+            <h2>Data Charts Gallery</h2>
+          </div>
+
+          <div class="visualization-split-layout">
+            <div class="vis-controls-panel" style="width: 220px;">
+              <div class="classic-groupbox" style="height: 100%; padding: 8px;">
+                <legend class="groupbox-legend">Chart Settings</legend>
+                
+                <div class="form-row-stacked">
+                  <label for="vis-chart-type">Chart Type:</label>
+                  <select id="vis-chart-type" class="xp-select-block" onchange="handleChartTypeChange()">
+                    <option value="bar">Bar Chart</option>
+                    <option value="histogram">Histogram</option>
+                    <option value="scatter">Scatter Plot</option>
+                    <option value="line">Line Trend</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="boxplot">Box Plot</option>
+                    <option value="heatmap">Correlation Matrix</option>
+                  </select>
+                </div>
+
+                <div class="form-row-stacked" id="vis-x-select-container">
+                  <label for="vis-x-select" id="vis-x-label">Independent Variable (X):</label>
+                  <select id="vis-x-select" class="xp-select-block" onchange="renderActiveChart()"></select>
+                </div>
+
+                <div class="form-row-stacked" id="vis-y-select-container">
+                  <label for="vis-y-select">Dependent Variable (Y):</label>
+                  <select id="vis-y-select" class="xp-select-block" onchange="renderActiveChart()"></select>
+                </div>
+
+                <div class="form-row-stacked">
+                  <label for="vis-filter-col">Filter Column:</label>
+                  <select id="vis-filter-col" class="xp-select-block" onchange="handleVisFilterColChange()"></select>
+                </div>
+
+                <div class="form-row-stacked hidden" id="vis-filter-val-container">
+                  <label for="vis-filter-val">Filter Value Match:</label>
+                  <select id="vis-filter-val" class="xp-select-block" onchange="renderActiveChart()"></select>
+                </div>
+
+                <button class="xp-btn xp-btn-success xp-btn-block" style="margin-top: 15px;" onclick="downloadChartCanvas()">Save PNG Image</button>
+              </div>
+            </div>
+
+            <div class="vis-canvas-panel flex-1">
+              <div class="canvas-well border-inset" style="min-height: 280px; padding: 5px;">
+                <canvas id="vis-chart-canvas" width="600" height="340"></canvas>
+                <div id="vis-chart-legend" class="chart-legend-box border-inset" style="max-height: 40px;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 6: Reports -->
+        <section id="page-reports" class="page-panel">
+          <div class="workspace-header-title-row print-hidden">
+            <h2>Dataset Audit Report</h2>
+            <div class="header-action-row">
+              <button class="xp-btn xp-btn-primary" onclick="window.print()">Print / PDF</button>
+              <button class="xp-btn xp-btn-success" onclick="exportReportHtml()">Save HTML Report</button>
+            </div>
+          </div>
+
+          <div class="printable-document border-inset" id="printable-report-card" style="padding: 20px;">
+            <div class="report-print-header">
+              <div>
+                <h1 style="font-size: 16px; color: #003399;">DATAPREP QUALITY REPORT</h1>
+                <p>Date: <span id="report-timestamp">--</span></p>
+                <p>Dataset Name: <span id="report-filename">--</span></p>
+              </div>
+              <div class="report-score-box" style="width: 80px; padding: 5px;">
+                <span class="r-lbl" style="font-size: 8px;">Health Score</span>
+                <span class="r-val" id="report-quality-score" style="font-size: 18px;">--</span>
+              </div>
+            </div>
+
+            <hr class="report-divider" style="margin: 10px 0;">
+
+            <div class="report-section">
+              <h3>Structural Summary</h3>
+              <div class="report-meta-grid" style="grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 10px;">
+                <div>Rows: <strong id="report-rows">--</strong></div>
+                <div>Columns: <strong id="report-cols">--</strong></div>
+                <div>Missing Cells: <strong id="report-missing">--</strong></div>
+                <div>Duplicates: <strong id="report-duplicates">--</strong></div>
+                <div>Memory: <strong id="report-memory">--</strong></div>
+                <div>Completeness: <strong id="report-completeness">--</strong></div>
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h3>Column Schema Definitions</h3>
+              <table class="report-data-table">
+                <thead>
+                  <tr><th>Index</th><th>Column Name</th><th>Type</th><th>Completeness</th><th>Mean Value</th></tr>
+                </thead>
+                <tbody id="report-schema-table-body"></tbody>
+              </table>
+            </div>
+
+            <div class="report-section">
+              <h3>Cleaning Actions Log</h3>
+              <table class="report-data-table">
+                <thead>
+                  <tr><th>Step</th><th>Time</th><th>Action</th><th>Description</th></tr>
+                </thead>
+                <tbody id="report-operations-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 7: Export -->
+        <section id="page-export" class="page-panel">
+          <div class="workspace-header-title">
+            <h2>Download Prepared Dataset</h2>
+          </div>
+
+          <div class="export-workspace-container">
+            <div class="export-settings-card" style="width: 250px;">
+              <div class="classic-groupbox">
+                <legend class="groupbox-legend">Export Settings</legend>
+                
+                <div class="form-row-stacked">
+                  <label for="export-format">Format:</label>
+                  <select id="export-format" class="xp-select-block" onchange="handleExportFormatChange(this.value)">
+                    <option value="csv">Delimited CSV (*.csv)</option>
+                    <option value="json">Structured JSON Array (*.json)</option>
+                    <option value="excel">Excel-Compatible HTML (*.xls)</option>
+                    <option value="sql">SQL Insert Statements (*.sql)</option>
+                  </select>
+                </div>
+
+                <div class="form-row-stacked" id="export-csv-options">
+                  <label for="export-delimiter">Delimiter:</label>
+                  <select id="export-delimiter" class="xp-select-block">
+                    <option value=",">Comma (,)</option>
+                    <option value=";">Semicolon (;)</option>
+                    <option value="\t">Tab (\t)</option>
+                  </select>
+                  <div class="checkbox-row" style="margin-top: 5px;">
+                    <input type="checkbox" id="export-include-headers" checked>
+                    <label for="export-include-headers">Include Header labels</label>
+                  </div>
+                </div>
+
+                <div class="form-row-stacked hidden" id="export-sql-options">
+                  <label for="export-sql-tablename">SQL Table Name:</label>
+                  <input type="text" id="export-sql-tablename" value="prepared_dataset" class="xp-input-block">
+                </div>
+
+                <div class="form-row-stacked">
+                  <label for="export-filename-input">Output Filename:</label>
+                  <input type="text" id="export-filename-input" value="clean_export" class="xp-input-block">
+                </div>
+
+                <button class="xp-btn xp-btn-success xp-btn-block" style="margin-top: 15px;" onclick="executeExportDownload()">Download Dataset File</button>
+                <button class="xp-btn xp-btn-block" style="margin-top: 5px;" onclick="downloadCleaningHistoryLog()">Save Cleaning Log</button>
+              </div>
+            </div>
+
+            <div class="export-preview-card flex-1">
+              <div class="classic-groupbox" style="height: 100%;">
+                <legend class="groupbox-legend">Text Preview</legend>
+                <div class="export-raw-output-well border-inset" id="export-raw-preview" style="height: 240px; font-size: 10px;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PAGE 8: Machine Learning Models -->
+        <section id="page-ml" class="page-panel">
+          <div class="workspace-header-title">
+            <h2>Machine Learning Models</h2>
+          </div>
+
+          <div class="visualization-split-layout">
+            
+            <!-- Left Controls Box -->
+            <div class="vis-controls-panel" style="width: 240px; flex-shrink: 0;">
+              <div class="classic-groupbox" style="height: 100%; padding: 8px; box-sizing: border-box;">
+                <legend class="groupbox-legend">Model Configuration</legend>
+                
+                <div class="form-row-stacked">
+                  <label for="ml-model-type">Model Type:</label>
+                  <select id="ml-model-type" class="xp-select-block" onchange="handleMlModelTypeChange()">
+                    <optgroup label="Regression">
+                      <option value="linear">Linear Regression</option>
+                      <option value="ridge">Ridge Regression</option>
+                    </optgroup>
+                    <optgroup label="Classification">
+                      <option value="logistic">Logistic Regression</option>
+                      <option value="knn">KNN Classifier</option>
+                    </optgroup>
+                    <optgroup label="Clustering">
+                      <option value="kmeans">K-Means Clustering</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div class="form-row-stacked">
+                  <label for="ml-x-select" id="ml-x-label">Independent Feature (X):</label>
+                  <select id="ml-x-select" class="xp-select-block"></select>
+                </div>
+
+                <div class="form-row-stacked">
+                  <label for="ml-y-select" id="ml-y-label">Dependent Target (Y):</label>
+                  <select id="ml-y-select" class="xp-select-block"></select>
+                </div>
+
+                <!-- Dynamic Hyperparameters injected here -->
+                <div class="form-row-stacked" id="ml-param-container"></div>
+
+                <div class="form-row-stacked" id="ml-split-container">
+                  <label for="ml-split-ratio">Train / Test Split:</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="range" id="ml-split-ratio" min="50" max="95" value="80" style="flex: 1; height: 18px;" oninput="document.getElementById('ml-split-val').innerText = this.value + '/' + (100 - this.value)">
+                    <span id="ml-split-val" style="font-weight: bold; font-size: 11px; width: 45px;">80/20</span>
+                  </div>
+                </div>
+
+                <button class="xp-btn xp-btn-success xp-btn-block" style="margin-top: 15px;" onclick="trainAndVisualizeMlModel()">
+                  🚀 Train & Visualize
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Results Box -->
+            <div class="vis-canvas-panel flex-1" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="classic-groupbox" style="flex: 1; padding: 8px; display: flex; flex-direction: column; box-sizing: border-box;">
+                <legend class="groupbox-legend">Model Diagnostic Summary</legend>
+                <div id="ml-summary-box" class="upload-summary-box border-inset" style="padding: 6px; font-size: 11px; background-color: #FFF; min-height: 50px; overflow-y: auto;">
+                  <p class="text-muted italic">Configure target variables and click Train to view predictive diagnostics.</p>
+                </div>
+              </div>
+
+              <div class="canvas-well border-inset" style="min-height: 260px; padding: 5px; flex-shrink: 0; background-color: #000; display: flex; justify-content: center; align-items: center; position: relative;">
+                <canvas id="ml-chart-canvas" width="560" height="260" style="background-color: #000; display: block;"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+
+    <!-- Status Bar -->
+    <footer class="status-bar" id="statusbar-panel">
+      <div class="status-pane pane-state" id="status-running-state">
+        <span class="state-indicator success">●</span> Ready
+      </div>
+      <div class="status-pane pane-dataset" id="status-dataset-name">
+        Dataset: [None Loaded]
+      </div>
+      <div class="status-pane pane-metrics" id="status-dim">
+        Size: 0 Rows × 0 Cols
+      </div>
+      <div class="status-pane pane-memory" id="status-memory">
+        Usage: 0 KB
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <dialog id="modal-confirm" class="retro-dialog">
+    <div class="dialog-header">
+      <span class="dialog-title">Confirm Action</span>
+      <button class="dialog-close-btn" onclick="closeConfirmModal()">✕</button>
+    </div>
+    <div class="dialog-body">
+      <div class="dialog-icon-message">
+        <span class="diag-icon-warning">⚠️</span>
+        <p id="confirm-modal-message">Confirm action execution?</p>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="xp-btn xp-btn-primary" id="confirm-modal-yes-btn">Yes</button>
+      <button class="xp-btn" onclick="closeConfirmModal()">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- About Dialog -->
+  <dialog id="modal-about" class="retro-dialog">
+    <div class="dialog-header">
+      <span class="dialog-title">About</span>
+      <button class="dialog-close-btn" onclick="closeAboutModal()">✕</button>
+    </div>
+    <div class="dialog-body text-center" style="font-size: 11px;">
+      <span class="about-app-logo">📊</span>
+      <h2>DataPrep Studio</h2>
+      <p class="about-version">v1.0.5</p>
+      <p class="about-copyright">Copyright © 2002-2005 MicroSoft Corp.</p>
+    </div>
+    <div class="dialog-footer">
+      <button class="xp-btn xp-btn-primary" onclick="closeAboutModal()">OK</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
