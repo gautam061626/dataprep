@@ -499,6 +499,7 @@ async def export_dataset(
         raise HTTPException(status_code=400, detail=f"Unsupported format type: {format}")
 
 # Serves components, pages, and frontend at root
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend_dir")
 app.mount("/components", StaticFiles(directory="components"), name="components")
 app.mount("/pages", StaticFiles(directory="pages"), name="pages")
 app.mount("/", StaticFiles(directory="frontend", html=True), name="static")
