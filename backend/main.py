@@ -6,11 +6,15 @@ from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import json
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # Import custom managers
 from backend.data_manager import DataManager
-from backend.ml_manager import MLManager
+from backend.ml_manager import MLManager, fig_to_base64
 from backend.report_manager import ReportManager
+
 
 app = FastAPI(title="DataPrep Studio API", version="1.0.5")
 

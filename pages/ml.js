@@ -8,46 +8,122 @@ import * as API from '../frontend/js/api.js';
 let mlPlots = {}; // Caches trained model plots (base64)
 let activePlotTab = "eval"; // 'eval' | 'importance' | 'shap'
 
+// Model type classification lookup
+const REGRESSION_MODELS = ['linear', 'ridge', 'tree_reg', 'forest_reg', 'knn_reg', 'svm_reg'];
+const CLASSIFICATION_MODELS = ['logistic', 'tree_class', 'forest_class', 'knn_class', 'svm_class', 'naive_bayes'];
+
+function isRegressionModel(modelKey) {
+    return REGRESSION_MODELS.includes(modelKey);
+}
+
+function isClassificationModel(modelKey) {
+    return CLASSIFICATION_MODELS.includes(modelKey);
+}
+
 export function refreshMlPage() {
-    populateMlDropdowns();
     handleMlModelTypeChange();
     renderMlResults();
 }
 
+/**
+ * Populates both X and Y dropdowns, filtering columns by model type:
+ * - Regression: X = numeric only, Y = numeric only
+ * - Classification: X = all columns, Y = categorical columns preferred (but all shown)
+ */
 function populateMlDropdowns() {
     const ySelect = document.getElementById('ml-y-select');
     const xSelect = document.getElementById('ml-x-select');
+    const modelKey = document.getElementById('ml-model-type')?.value || 'linear';
 
     if (!ySelect || !xSelect) return;
 
-    // Convert X select to listbox (multiple select)
-    xSelect.multiple = true;
-    xSelect.size = 5;
-    xSelect.style.height = "70px";
+    const isRegression = isRegressionModel(modelKey);
 
+    // Save current selections to restore after repopulation
     const lastY = ySelect.value;
-    // Get array of selected X features
-    const lastX = Array.from(xSelect.selectedOptions).map(opt => opt.value);
+    const lastX = xSelect.value;
 
     ySelect.innerHTML = '';
     xSelect.innerHTML = '';
 
+    // Separate columns by type
+    const numericCols = [];
+    const categoricalCols = [];
     AppState.columns.forEach(col => {
-        ySelect.innerHTML += `<option value="${col}">${col}</option>`;
-        xSelect.innerHTML += `<option value="${col}">${col}</option>`;
-    });
-
-    if (lastY && AppState.columns.includes(lastY)) ySelect.value = lastY;
-    
-    // Restore selected X columns
-    Array.from(xSelect.options).forEach(opt => {
-        if (lastX.includes(opt.value)) {
-            opt.selected = true;
+        if (col === '_rowId') return; // skip internal column
+        if (AppState.columnTypes[col] === 'Numeric') {
+            numericCols.push(col);
+        } else {
+            categoricalCols.push(col);
         }
     });
+
+    if (isRegression) {
+        // Regression: features = numeric, target = numeric
+        numericCols.forEach(col => {
+            xSelect.innerHTML += `<option value="${col}">${col}</option>`;
+            ySelect.innerHTML += `<option value="${col}">${col}</option>`;
+        });
+    } else {
+        // Classification: features = all, target = categorical preferred (show all but group)
+        // Features (X): show all columns
+        AppState.columns.forEach(col => {
+            if (col === '_rowId') return;
+            xSelect.innerHTML += `<option value="${col}">${col}</option>`;
+        });
+
+        // Target (Y): show categorical first, then numeric
+        if (categoricalCols.length > 0) {
+            const catGroup = document.createElement('optgroup');
+            catGroup.label = 'Categorical (Recommended)';
+            categoricalCols.forEach(col => {
+                const opt = document.createElement('option');
+                opt.value = col;
+                opt.textContent = col;
+                catGroup.appendChild(opt);
+            });
+            ySelect.appendChild(catGroup);
+        }
+        if (numericCols.length > 0) {
+            const numGroup = document.createElement('optgroup');
+            numGroup.label = 'Numeric';
+            numericCols.forEach(col => {
+                const opt = document.createElement('option');
+                opt.value = col;
+                opt.textContent = col;
+                numGroup.appendChild(opt);
+            });
+            ySelect.appendChild(numGroup);
+        }
+    }
+
+    // Restore selections if still valid
+    if (lastY && ySelect.querySelector(`option[value="${lastY}"]`)) {
+        ySelect.value = lastY;
+    }
+    if (lastX && xSelect.querySelector(`option[value="${lastX}"]`)) {
+        xSelect.value = lastX;
+    }
+
+    // Update labels to indicate filtering
+    const xLabel = document.getElementById('ml-x-label');
+    const yLabel = document.getElementById('ml-y-label');
+    if (xLabel) {
+        xLabel.textContent = isRegression
+            ? 'Independent Feature (X) — Numeric:'
+            : 'Independent Feature (X) — All Columns:';
+    }
+    if (yLabel) {
+        yLabel.textContent = isRegression
+            ? 'Dependent Target (Y) — Numeric:'
+            : 'Dependent Target (Y) — Categorical:';
+    }
 }
 
 export function handleMlModelTypeChange() {
+    // First re-populate dropdowns based on model type
+    populateMlDropdowns();
+
     const modelKey = document.getElementById('ml-model-type').value;
     const paramContainer = document.getElementById('ml-param-container');
     if (!paramContainer) return;
@@ -90,9 +166,9 @@ export async function trainAndVisualizeMlModel() {
     const modelType = document.getElementById('ml-model-type').value;
     const targetCol = document.getElementById('ml-y-select').value;
     
-    // Extract multi-selected features
+    // Extract selected feature
     const xSelect = document.getElementById('ml-x-select');
-    const featureCols = Array.from(xSelect.selectedOptions).map(opt => opt.value);
+    const featureCols = xSelect.value ? [xSelect.value] : [];
 
     if (featureCols.length === 0) {
         alert("Please select at least 1 feature variable (X).");
@@ -237,6 +313,7 @@ function renderMlResults() {
 // Binds actions
 export function initMlControls() {
     window.trainAndVisualizeMlModel = trainAndVisualizeMlModel;
+    window.handleMlModelTypeChange = handleMlModelTypeChange;
 
     const modelType = document.getElementById('ml-model-type');
     if (modelType) {
