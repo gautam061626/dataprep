@@ -17,8 +17,8 @@ app = FastAPI(title="DataPrep Studio API", version="1.0.5")
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=["*"],  # Allows any origin to fetch the backend
+    allow_credentials=False,  # Set to False to allow "*" wildcard origins without FastAPI/Starlette startup errors
     allow_methods=["*"],
     allow_headers=["*"],
 )
