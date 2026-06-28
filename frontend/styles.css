@@ -2410,7 +2410,8 @@ body {
   .visualization-split-layout,
   .feature-split-layout,
   .validation-split-layout,
-  .dashboard-mid-row {
+  .dashboard-mid-row,
+  .report-charts-row {
     flex-direction: column !important;
     height: auto !important;
     gap: 12px !important;
@@ -2423,7 +2424,8 @@ body {
   .vis-controls-panel,
   .vis-canvas-panel,
   .dashboard-mid-row > .classic-groupbox,
-  .dashboard-mid-row > .flex-1 {
+  .dashboard-mid-row > .flex-1,
+  .report-charts-row > .classic-groupbox {
     width: 100% !important;
     height: auto !important;
     flex-shrink: 1 !important;

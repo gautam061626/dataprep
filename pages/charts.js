@@ -10,6 +10,15 @@ let activeStaticImg = ""; // Caches static matplotlib image
 export function refreshVisualizationsPage() {
     populateChartsDropdowns();
     handleChartTypeChange();
+
+    // Force Plotly to resize to container after layout settle
+    if (window.Plotly && document.getElementById('vis-plotly-container')) {
+        setTimeout(() => {
+            try {
+                window.Plotly.Plots.resize('vis-plotly-container');
+            } catch (e) {}
+        }, 150);
+    }
 }
 
 function populateChartsDropdowns() {
@@ -91,7 +100,7 @@ export async function renderActiveChart() {
     if (legend) legend.style.display = 'none';
 
     if (!container) {
-        const well = document.querySelector('.canvas-well');
+        const well = document.querySelector('#page-visualizations .canvas-well');
         if (well) {
             container = document.createElement('div');
             container.id = 'vis-plotly-container';
